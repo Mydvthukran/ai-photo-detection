@@ -50,6 +50,8 @@ async def analyze_endpoint(file: UploadFile = File(...)):
         "success": True,
         "is_ai_generated": is_ai_generated,
         "overall_confidence": overall_confidence,
+        "confidence": overall_confidence,
+        "all_scores": ai_result.get("all_scores", []) if isinstance(ai_result, dict) else [],
         "ai_analysis": ai_result,
         "ela_analysis": ela_result,
         "metadata_analysis": metadata_result
