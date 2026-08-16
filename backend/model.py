@@ -22,26 +22,31 @@ def analyze_image(image_bytes: bytes):
             image = image.convert("RGB")
             
         if pipe is None:
-            return {"error": "Model failed to load."}
+            return {"success": False, "error": "Model failed to load or is not available."}
             
         # Run inference
         results = pipe(image)
         
         # Format the results
-        # results usually looks like [{'label': 'FAKE', 'score': 0.98}, {'label': 'REAL', 'score': 0.02}]
-        # Let's sort and extract the highest confidence
-        
-        # Sort by score descending
+        # results looks like [{'label': 'FAKE', 'score': 0.98}, {'label': 'REAL', 'score': 0.02}]
         sorted_results = sorted(results, key=lambda x: x['score'], reverse=True)
         top_prediction = sorted_results[0]
         
         is_ai_generated = top_prediction['label'].upper() == "FAKE"
-        confidence = top_prediction['score']
+        confidence = float(top_prediction['score'])
+        
+        # Calculate the probability that the image is fake (between 0.0 and 1.0)
+        fake_entry = next((x for x in results if x['label'].upper() == "FAKE"), None)
+        if fake_entry is not None:
+            fake_score = float(fake_entry['score'])
+        else:
+            fake_score = confidence if is_ai_generated else (1.0 - confidence)
         
         return {
             "success": True,
             "is_ai_generated": is_ai_generated,
-            "confidence": float(confidence),
+            "confidence": confidence,
+            "fake_score": fake_score,
             "label": top_prediction['label'],
             "all_scores": results
         }
